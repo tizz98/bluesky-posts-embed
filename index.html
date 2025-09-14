@@ -326,7 +326,7 @@
             filteredPosts = filteredPosts.slice(0, CONFIG.postCount);
             
             // Display posts
-            await displayPosts(filteredPosts, didResponse);
+            await displayPosts(filteredPosts, didData);
             
         } catch (error) {
             widget.innerHTML = `
@@ -340,7 +340,7 @@
         }
     }
     
-    async function displayPosts(posts, didResponse) {
+    async function displayPosts(posts, didData) {
         const widget = document.getElementById('blueskyWidget');
         
         if (posts.length === 0) {
