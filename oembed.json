@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "type": "rich",
+  "provider_name": "Bluesky Posts Widget",
+  "provider_url": "https://tizz98.github.io/bluesky-posts-embed/",
+  "title": "Elijah.soy's Bluesky Posts",
+  "author_name": "elijah.soy",
+  "author_url": "https://bsky.app/profile/elijah.soy",
+  "html": "<iframe src=\"https://tizz98.github.io/bluesky-posts-embed/?handle=elijah.soy&hashtags=quotes,web&count=10\" width=\"600\" height=\"400\" frameborder=\"0\" scrolling=\"no\"></iframe>",
+  "width": 600,
+  "height": 400
+}
