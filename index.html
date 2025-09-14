@@ -326,7 +326,7 @@
             filteredPosts = filteredPosts.slice(0, CONFIG.postCount);
             
             // Display posts
-            displayPosts(filteredPosts);
+            await displayPosts(filteredPosts, didResponse);
             
         } catch (error) {
             widget.innerHTML = `
@@ -340,7 +340,7 @@
         }
     }
     
-    function displayPosts(posts) {
+    async function displayPosts(posts, didResponse) {
         const widget = document.getElementById('blueskyWidget');
         
         if (posts.length === 0) {
@@ -350,11 +350,6 @@
             widget.innerHTML = `<div class="bluesky-error">${hashtagText}</div>`;
             return;
         }
-        
-        // Resolve handle → DID
-        const didResponse = await fetch(`https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle=${CONFIG.handle}`);
-        if (!didResponse.ok) throw new Error('Handle not found');
-        const didData = await didResponse.json();
             
         // Fetch profile info
         const profileResponse = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${didData.did}`);
