@@ -214,6 +214,36 @@
             grid-template-columns: 1fr;
         }
     }
+    
+    .bluesky-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .bluesky-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    
+    .bluesky-user-info {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+    
+    .bluesky-display-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: #333;
+    }
+    
+    .bluesky-handle {
+      font-size: 12px;
+      color: #666;
+    }
 </style>
 
 </head>
@@ -267,11 +297,15 @@
         
         try {
             // Resolve handle to DID using public API
+            // Resolve handle → DID
             const didResponse = await fetch(`https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle=${CONFIG.handle}`);
-            if (!didResponse.ok) {
-                throw new Error('Handle not found');
-            }
+            if (!didResponse.ok) throw new Error('Handle not found');
             const didData = await didResponse.json();
+            
+            // Fetch profile info
+            const profileResponse = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${didData.did}`);
+            if (!profileResponse.ok) throw new Error('Profile not found');
+            const profileData = await profileResponse.json();
             
             // Fetch posts using public API
             const postsResponse = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=${didData.did}&limit=50`);
@@ -326,12 +360,19 @@
         // Build header if not hidden
         let header = '';
         if (!CONFIG.hideHeader) {
-            header = `
-                <div class="bluesky-widget-header">
-                    <h3 class="bluesky-widget-title">${CONFIG.title}</h3>
-                    <a href="https://bsky.app/profile/${handleClean}" target="_blank" class="bluesky-follow-btn">Follow on Bluesky</a>
+          header = `
+            <div class="bluesky-widget-header">
+              <h3 class="bluesky-widget-title">${CONFIG.title}</h3>
+              <div class="bluesky-profile">
+                <img src="${profileData.avatar}" alt="${profileData.displayName}" class="bluesky-avatar">
+                <div class="bluesky-user-info">
+                  <div class="bluesky-display-name">${profileData.displayName || ''}</div>
+                  <div class="bluesky-handle">@${profileData.handle}</div>
                 </div>
-            `;
+                <a href="https://bsky.app/profile/${profileData.handle}" target="_blank" class="bluesky-follow-btn">Follow</a>
+              </div>
+            </div>
+          `;
         }
         
         // Build posts HTML
