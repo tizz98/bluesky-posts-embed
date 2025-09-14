@@ -302,11 +302,6 @@
             if (!didResponse.ok) throw new Error('Handle not found');
             const didData = await didResponse.json();
             
-            // Fetch profile info
-            const profileResponse = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${didData.did}`);
-            if (!profileResponse.ok) throw new Error('Profile not found');
-            const profileData = await profileResponse.json();
-            
             // Fetch posts using public API
             const postsResponse = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=${didData.did}&limit=50`);
             if (!postsResponse.ok) {
@@ -357,16 +352,15 @@
         }
         
         // Resolve handle → DID
-            const didResponse = await fetch(`https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle=${CONFIG.handle}`);
-            if (!didResponse.ok) throw new Error('Handle not found');
-            const didData = await didResponse.json();
+        const didResponse = await fetch(`https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle=${CONFIG.handle}`);
+        if (!didResponse.ok) throw new Error('Handle not found');
+        const didData = await didResponse.json();
             
-            // Fetch profile info
-            const profileResponse = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${didData.did}`);
-            if (!profileResponse.ok) throw new Error('Profile not found');
-            const profileData = await profileResponse.json();
-            
-        
+        // Fetch profile info
+        const profileResponse = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${didData.did}`);
+        if (!profileResponse.ok) throw new Error('Profile not found');
+        const profileData = await profileResponse.json();
+
         const handleClean = CONFIG.handle.replace('.bsky.social', '');
         
         // Build header if not hidden
