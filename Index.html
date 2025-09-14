@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluesky Posts Widget</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: transparent;
+        padding: 10px;
+    }
+    
+    .bluesky-widget {
+        max-width: 100%;
+    }
+    
+    .bluesky-widget-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #0085ff;
+    }
+    
+    .bluesky-widget-title {
+        font-size: 1.3em;
+        font-weight: bold;
+        color: #333;
+        margin: 0;
+    }
+    
+    .bluesky-follow-btn {
+        background: #0085ff;
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    
+    .bluesky-follow-btn:hover {
+        background: #0066cc;
+    }
+    
+    .bluesky-posts-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .bluesky-post {
+        background: white;
+        border: 1px solid #e1e8ed;
+        border-radius: 12px;
+        padding: 15px;
+        transition: box-shadow 0.2s ease;
+    }
+    
+    .bluesky-post:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .bluesky-post-content {
+        font-size: 14px;
+        line-height: 1.5;
+        color: #333;
+        margin-bottom: 10px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    
+    .bluesky-post-content a {
+        color: #0085ff;
+        text-decoration: none;
+    }
+    
+    .bluesky-post-content a:hover {
+        text-decoration: underline;
+    }
+    
+    .bluesky-post-images {
+        display: grid;
+        gap: 8px;
+        margin: 10px 0;
+    }
+    
+    .bluesky-post-images.single { grid-template-columns: 1fr; }
+    .bluesky-post-images.double { grid-template-columns: 1fr 1fr; }
+    .bluesky-post-images.triple { grid-template-columns: 1fr 1fr 1fr; }
+    .bluesky-post-images.quad { grid-template-columns: 1fr 1fr; }
+    
+    .bluesky-post-image {
+        width: 100%;
+        border-radius: 8px;
+        cursor: pointer;
+        object-fit: cover;
+        aspect-ratio: 1;
+    }
+    
+    .bluesky-post-image.single {
+        aspect-ratio: auto;
+        max-height: 400px;
+    }
+    
+    .bluesky-post-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        color: #666;
+        padding-top: 10px;
+        border-top: 1px solid #f0f0f0;
+    }
+    
+    .bluesky-post-link {
+        color: #0085ff;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .bluesky-post-link:hover {
+        text-decoration: underline;
+    }
+    
+    .bluesky-loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+    
+    .bluesky-error {
+        background: #fff3f3;
+        border: 1px solid #ffcccc;
+        color: #cc0000;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    .bluesky-config-error {
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        padding: 30px;
+        text-align: center;
+        border-radius: 8px;
+    }
+    
+    .bluesky-config-error h3 {
+        color: #333;
+        margin-bottom: 15px;
+    }
+    
+    .bluesky-config-error p {
+        color: #666;
+        margin-bottom: 10px;
+    }
+    
+    .bluesky-config-error code {
+        background: #fff;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        display: block;
+        margin: 20px 0;
+        font-size: 12px;
+        word-break: break-all;
+    }
+    
+    /* Grid layout */
+    .bluesky-posts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 15px;
+    }
+    
+    /* Loading spinner */
+    .spinner {
+        border: 3px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 3px solid #0085ff;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 500px) {
+        .bluesky-widget-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .bluesky-posts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+</head>
+<body>
+    <div id="blueskyWidget" class="bluesky-widget"></div>
+
+<script>
+    // Get parameters from URL
+    function getUrlParameter(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    }
+    
+    // Configuration from URL parameters
+    const CONFIG = {
+        handle: getUrlParameter('handle') || getUrlParameter('user') || '',
+        hashtags: (getUrlParameter('hashtags') || getUrlParameter('tags') || '').split(',').filter(t => t),
+        postCount: parseInt(getUrlParameter('count') || getUrlParameter('limit') || '10'),
+        layout: getUrlParameter('layout') || 'list',
+        title: getUrlParameter('title') || 'Recent Posts',
+        hideHeader: getUrlParameter('hideHeader') === 'true'
+    };
+    
+    // Main function to load posts
+    async function loadBlueskyPosts() {
+        const widget = document.getElementById('blueskyWidget');
+        
+        // Check if handle is provided
+        if (!CONFIG.handle) {
+            widget.innerHTML = `
+                <div class="bluesky-config-error">
+                    <h3>⚙️ Configuration Needed</h3>
+                    <p>Add your Bluesky handle to the URL to display posts.</p>
+                    <p><strong>Example URL:</strong></p>
+                    <code>${window.location.origin}${window.location.pathname}?handle=yourhandle.bsky.social&hashtags=quotes,web&count=10</code>
+                    <p style="margin-top: 20px;"><strong>Available parameters:</strong></p>
+                    <ul style="text-align: left; display: inline-block;">
+                        <li><strong>handle</strong> - Your Bluesky handle (required)</li>
+                        <li><strong>hashtags</strong> - Comma-separated hashtags to filter</li>
+                        <li><strong>count</strong> - Number of posts (1-30)</li>
+                        <li><strong>layout</strong> - "list" or "grid"</li>
+                        <li><strong>title</strong> - Widget title text</li>
+                        <li><strong>hideHeader</strong> - "true" to hide header</li>
+                    </ul>
+                </div>
+            `;
+            return;
+        }
+        
+        widget.innerHTML = '<div class="bluesky-loading"><div class="spinner"></div><p>Loading posts...</p></div>';
+        
+        try {
+            // Resolve handle to DID using public API
+            const didResponse = await fetch(`https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle=${CONFIG.handle}`);
+            if (!didResponse.ok) {
+                throw new Error('Handle not found');
+            }
+            const didData = await didResponse.json();
+            
+            // Fetch posts using public API
+            const postsResponse = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=${didData.did}&limit=50`);
+            if (!postsResponse.ok) {
+                throw new Error('Could not fetch posts');
+            }
+            const postsData = await postsResponse.json();
+            
+            // Filter posts
+            let filteredPosts = postsData.feed;
+            
+            // Filter by hashtags if specified
+            if (CONFIG.hashtags.length > 0) {
+                filteredPosts = filteredPosts.filter(item => {
+                    const text = item.post.record.text || '';
+                    return CONFIG.hashtags.every(tag => 
+                        text.toLowerCase().includes('#' + tag.trim().toLowerCase())
+                    );
+                });
+            }
+            
+            // Limit to requested count
+            filteredPosts = filteredPosts.slice(0, CONFIG.postCount);
+            
+            // Display posts
+            displayPosts(filteredPosts);
+            
+        } catch (error) {
+            widget.innerHTML = `
+                <div class="bluesky-error">
+                    <strong>Unable to load posts</strong><br>
+                    Please check that the handle "${CONFIG.handle}" is correct and the account is public.
+                </div>
+            `;
+            console.error('Error loading Bluesky posts:', error);
+        }
+    }
+    
+    function displayPosts(posts) {
+        const widget = document.getElementById('blueskyWidget');
+        
+        if (posts.length === 0) {
+            const hashtagText = CONFIG.hashtags.length > 0 
+                ? `No posts found with hashtags: #${CONFIG.hashtags.join(', #')}`
+                : 'No posts found';
+            widget.innerHTML = `<div class="bluesky-error">${hashtagText}</div>`;
+            return;
+        }
+        
+        const handleClean = CONFIG.handle.replace('.bsky.social', '');
+        
+        // Build header if not hidden
+        let header = '';
+        if (!CONFIG.hideHeader) {
+            header = `
+                <div class="bluesky-widget-header">
+                    <h3 class="bluesky-widget-title">${CONFIG.title}</h3>
+                    <a href="https://bsky.app/profile/${handleClean}" target="_blank" class="bluesky-follow-btn">Follow on Bluesky</a>
+                </div>
+            `;
+        }
+        
+        // Build posts HTML
+        const postsHTML = posts.map(item => {
+            const post = item.post;
+            const text = formatPostText(post.record.text);
+            const date = new Date(post.record.createdAt).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            const postId = post.uri.split('/').pop();
+            const postUrl = `https://bsky.app/profile/${handleClean}/post/${postId}`;
+            
+            // Handle images if present
+            let imagesHTML = '';
+            if (post.embed && post.embed.images) {
+                const images = post.embed.images;
+                const imageClass = images.length === 1 ? 'single' : 
+                                  images.length === 2 ? 'double' : 
+                                  images.length === 3 ? 'triple' : 'quad';
+                
+                imagesHTML = `<div class="bluesky-post-images ${imageClass}">
+                    ${images.map(img => 
+                        `<img src="${img.thumb}" alt="${img.alt || ''}" class="bluesky-post-image ${images.length === 1 ? 'single' : ''}" onclick="window.open('${img.fullsize || img.thumb}', '_blank')">`
+                    ).join('')}
+                </div>`;
+            }
+            
+            return `
+                <div class="bluesky-post">
+                    <div class="bluesky-post-content">${text}</div>
+                    ${imagesHTML}
+                    <div class="bluesky-post-meta">
+                        <span class="bluesky-post-date">${date}</span>
+                        <a href="${postUrl}" target="_blank" class="bluesky-post-link">View →</a>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        const containerClass = CONFIG.layout === 'grid' ? 'bluesky-posts-grid' : 'bluesky-posts-container';
+        widget.innerHTML = header + `<div class="${containerClass}">` + postsHTML + '</div>';
+    }
+    
+    function formatPostText(text) {
+        // Escape HTML
+        text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        // Convert URLs to links
+        text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+        // Convert hashtags to search links
+        text = text.replace(/#(\w+)/g, '<a href="https://bsky.app/search?q=%23$1" target="_blank" rel="noopener">#$1</a>');
+        // Convert @mentions to profile links
+        text = text.replace(/@([a-zA-Z0-9._-]+)/g, '<a href="https://bsky.app/profile/$1" target="_blank" rel="noopener">@$1</a>');
+        return text;
+    }
+    
+    // Auto-resize iframe height
+    function resizeIframe() {
+        const height = document.body.scrollHeight;
+        window.parent.postMessage({ 
+            type: 'bluesky-widget-resize', 
+            height: height 
+        }, '*');
+    }
+    
+    // Observe changes and resize
+    const resizeObserver = new ResizeObserver(() => {
+        resizeIframe();
+    });
+    
+    // Start observing
+    resizeObserver.observe(document.body);
+    
+    // Load posts when page loads
+    loadBlueskyPosts();
+    
+    // Refresh posts every 5 minutes
+    setInterval(loadBlueskyPosts, 5 * 60 * 1000);
+</script>
+
+</body>
+</html>
