@@ -24,7 +24,7 @@ serve((req: Request) => {
       title: `${handle}'s Bluesky Posts`,
       author_name: handle,
       author_url: `https://bsky.app/profile/${handle}`,
-      html: `<iframe src="${iframeSrc}" width="600" height="400" frameborder="0" scrolling="no"></iframe>`,
+      html: `<iframe src="${iframeSrc}" width="600" height="400" frameborder="0" scrolling="yes"></iframe>`,
       width: 600,
       height: 400,
     };
