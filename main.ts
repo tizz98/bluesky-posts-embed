@@ -13,7 +13,7 @@ serve((req: Request) => {
     const hashtags = params.get("hashtags") ?? "";
     const count = params.get("count") ?? "10";
     const width = parseInt(params.get("width") ?? "600", 10);
-    const height = parseInt(params.get("height") ?? "400", 10);
+    const height = parseInt(params.get("height") ?? "800", 10);
 
     const iframeSrc =
       `https://tizz98.github.io/bluesky-posts-embed/?handle=${encodeURIComponent(handle)}&hashtags=${encodeURIComponent(hashtags)}&count=${encodeURIComponent(count)}`;
